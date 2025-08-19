@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Management – Search & List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background: #f4f4f9;
+      color: #333;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .panel {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    label { font-size: 14px; font-weight: bold; margin-bottom: 4px; display: block; }
+    input, select, button {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+      width: 100%;
+      font-size: 14px;
+    }
+    button {
+      cursor: pointer;
+      background: #0077ff;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+    }
+    button:hover { background: #005fcc; }
+    ul { list-style: none; padding: 0; }
+    li {
+      background: #fff;
+      margin: 8px 0;
+      padding: 12px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .title { font-weight: bold; font-size: 18px; }
+    .meta { font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>📅 Event Management – Search & List</h1>
+
+  <!-- Add Event Form -->
+  <div class="panel">
+    <h2>Add New Event</h2>
+    <form id="eventForm">
+      <label>Title</label>
+      <input type="text" id="title" required placeholder="Event title">
+
+      <label>Date</label>
+      <input type="date" id="dateNew" required>
+
+      <label>Start Time</label>
+      <input type="time" id="startTime">
+
+      <label>End Time</label>
+      <input type="time" id="endTime">
+
+      <label>Location</label>
+      <input type="text" id="location" placeholder="e.g. Delhi / Online">
+
+      <label>Category</label>
+      <select id="categoryNew" required>
+        <option value="">Select</option>
+        <option>Conference</option>
+        <option>Workshop</option>
+        <option>Webinar</option>
+        <option>Meetup</option>
+        <option>Festival</option>
+      </select>
+
+      <button type="submit">Add Event</button>
+    </form>
+  </div>
+
+  <!-- Filters -->
+  <div class="panel">
+    <h2>Search & Filters</h2>
+    <input type="text" id="search" placeholder="Search by title or location…">
+
+    <label>Category</label>
+    <select id="category">
+      <option value="">All</option>
+      <option>Conference</option>
+      <option>Workshop</option>
+      <option>Webinar</option>
+      <option>Meetup</option>
+      <option>Festival</option>
+    </select>
+
+    <label>Status</label>
+    <select id="status">
+      <option value="">Any</option>
+      <option value="upcoming">Upcoming</option>
+      <option value="past">Past</option>
+    </select>
+  </div>
+
+  <!-- Event List -->
+  <div class="panel">
+    <h2>Event List</h2>
+    <ul id="eventList"></ul>
+  </div>
+
+  <script>
+    // Sample events
+    const events = [
+      { title: "JS Dev Conference", date: "2025-08-22", startTime:"10:00", endTime:"17:00", location: "Mumbai", category: "Conference" },
+      { title: "React Workshop", date: "2025-08-20", startTime:"09:30", endTime:"12:30", location: "Hyderabad", category: "Workshop" },
+      { title: "Design Meetup", date: "2025-08-24", startTime:"18:00", endTime:"20:00", location: "Bengaluru", category: "Meetup" },
+      { title: "Data Science Webinar", date: "2025-08-21", startTime:"19:00", endTime:"20:00", location: "Online", category: "Webinar" },
+      { title: "Music Festival", date: "2025-09-05", startTime:"16:00", endTime:"23:00", location: "Pune", category: "Festival" }
+    ];
+
+    const eventList = document.getElementById("eventList");
+    const searchInput = document.getElementById("search");
+    const categoryFilter = document.getElementById("category");
+    const statusFilter = document.getElementById("status");
+
+    function statusOf(dateStr) {
+      const today = new Date().toISOString().slice(0,10);
+      if (dateStr < today) return "past";
+      return "upcoming";
+    }
+
+    function renderEvents(filtered) {
+      eventList.innerHTML = "";
+      if (filtered.length === 0) {
+        eventList.innerHTML = "<li>No events found.</li>";
+        return;
+      }
+      filtered.forEach(ev => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <div class="title">${ev.title}</div>
+          <div class="meta">${ev.date} ${ev.startTime ? "• " + ev.startTime : ""} – ${ev.endTime || ""} • ${ev.location} • ${ev.category}</div>
+        `;
+        eventList.appendChild(li);
+      });
+    }
+
+    function applyFilters() {
+      const q = searchInput.value.toLowerCase();
+      const cat = categoryFilter.value;
+      const stat = statusFilter.value;
+
+      const filtered = events.filter(ev => {
+        if (q && !(ev.title.toLowerCase().includes(q) || ev.location.toLowerCase().includes(q))) return false;
+        if (cat && ev.category !== cat) return false;
+        if (stat && statusOf(ev.date) !== stat) return false;
+        return true;
+      });
+
+      renderEvents(filtered);
+    }
+
+    // Event listeners
+    searchInput.addEventListener("input", applyFilters);
+    categoryFilter.addEventListener("input", applyFilters);
+    statusFilter.addEventListener("input", applyFilters);
+
+    document.getElementById("eventForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const newEvent = {
+        title: document.getElementById("title").value,
+        date: document.getElementById("dateNew").value,
+        startTime: document.getElementById("startTime").value,
+        endTime: document.getElementById("endTime").value,
+        location: document.getElementById("location").value,
+        category: document.getElementById("categoryNew").value
+      };
+      events.push(newEvent);
+      e.target.reset();
+      applyFilters();
+    });
+
+    // Initial render
+    applyFilters();
+  </script>
+</body>
+</html>
